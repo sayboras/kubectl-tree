@@ -7,10 +7,10 @@ import (
 	"k8s.io/klog"
 )
 
-type ReadyStatus string // True False Unknown or ""
+type Type string // True False Unknown or ""
 type Reason string
 
-func extractStatus(obj unstructured.Unstructured) (ReadyStatus, Reason) {
+func extractStatus(obj unstructured.Unstructured) (Type, Reason) {
 	jsonVal, _ := json.Marshal(obj.Object["status"])
 	klog.V(6).Infof("status for object=%s/%s: %s", obj.GetKind(), obj.GetName(), string(jsonVal))
 	statusF, ok := obj.Object["status"]
@@ -30,6 +30,7 @@ func extractStatus(obj unstructured.Unstructured) (ReadyStatus, Reason) {
 		return "", ""
 	}
 
+	customType := false
 	for _, cond := range conditionsV {
 		condM, ok := cond.(map[string]interface{})
 		if !ok {
@@ -41,9 +42,22 @@ func extractStatus(obj unstructured.Unstructured) (ReadyStatus, Reason) {
 		}
 		if condType == "Ready" {
 			condStatus, _ := condM["status"].(string)
-			condReason, _ := condM["reason"].(string)
-			return ReadyStatus(condStatus), Reason(condReason)
+			if condStatus == "True" {
+				condReason, _ := condM["reason"].(string)
+				return Type(condType), Reason(condReason)
+			}
 		}
+		if condType == "PermanentFailure" || condType == "Failure" || condType == "InterfaceChangeApplied" {
+			customType = true
+			condStatus, _ := condM["status"].(string)
+			if condStatus == "True" {
+				condReason, _ := condM["reason"].(string)
+				return Type(condType), Reason(condReason)
+			}
+		}
+	}
+	if customType {
+		return Type("In Progress"), Reason("")
 	}
 	return "", ""
 }

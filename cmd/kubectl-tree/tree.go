@@ -29,7 +29,7 @@ var (
 func treeView(out io.Writer, objs objectDirectory, obj unstructured.Unstructured) {
 	tbl := uitable.New()
 	tbl.Separator = "  "
-	tbl.AddRow("NAMESPACE", "NAME", "READY", "REASON", "AGE")
+	tbl.AddRow("NAMESPACE", "NAME", "STATUS", "REASON", "AGE")
 	treeViewInner("", tbl, objs, obj)
 	fmt.Fprintln(color.Output, tbl)
 }
@@ -39,9 +39,9 @@ func treeViewInner(prefix string, tbl *uitable.Table, objs objectDirectory, obj 
 
 	var readyColor *color.Color
 	switch ready {
-	case "True":
+	case "Ready", "InterfaceChangeApplied":
 		readyColor = green
-	case "False", "Unknown":
+	case "False", "Unknown", "PermanentFailure", "Failure":
 		readyColor = red
 	default:
 		readyColor = gray
