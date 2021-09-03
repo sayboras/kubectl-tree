@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	k8sApiErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
@@ -72,6 +73,10 @@ func queryAPI(client dynamic.Interface, api apiResource, allNs bool) ([]unstruct
 			Continue: next,
 		})
 		if err != nil {
+			if k8sApiErrors.IsForbidden(err) {
+				klog.V(2).Infof("no permission for (%s): %w", api.GroupVersionResource(), err)
+				return out, nil
+			}
 			return nil, fmt.Errorf("listing resources failed (%s): %w", api.GroupVersionResource(), err)
 		}
 		out = append(out, resp.Items...)
