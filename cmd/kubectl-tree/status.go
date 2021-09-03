@@ -51,8 +51,8 @@ func extractStatus(obj unstructured.Unstructured) (Type, Reason) {
 			customType = true
 			condStatus, _ := condM["status"].(string)
 			if condStatus == "True" {
-				condReason, _ := condM["reason"].(string)
-				return Type(condType), Reason(condReason)
+				message, _ := condM["message"].(string)
+				return Type(condType), Reason(message)
 			}
 		}
 	}

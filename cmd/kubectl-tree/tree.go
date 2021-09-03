@@ -29,7 +29,7 @@ var (
 func treeView(out io.Writer, objs objectDirectory, obj unstructured.Unstructured) {
 	tbl := uitable.New()
 	tbl.Separator = "  "
-	tbl.AddRow("NAMESPACE", "NAME", "STATUS", "REASON", "AGE")
+	tbl.AddRow("NAMESPACE", "NAME", "STATUS", "MESSAGE", "AGE")
 	treeViewInner("", tbl, objs, obj)
 	fmt.Fprintln(color.Output, tbl)
 }
